@@ -1,4 +1,4 @@
-# King County, USA House Price Prediction
+# King County, USA House Price Prediction in R
 
 This project analyzes housing prices in **King County, USA**, with the aim of understanding the key factors influencing house prices and predicting house values using a **Linear Regression Model**. The study leverages exploratory data analysis, data cleaning techniques, and regression modeling to provide insights into the housing market.
 
@@ -62,11 +62,10 @@ The project focuses on identifying the key drivers of house prices, such as **sq
 
 ## Technologies Used
 
-- **Programming Language**: Python (with pandas, NumPy, sklearn, and Matplotlib/Seaborn for EDA and modeling).  
+- **Programming Language**: R (with dplyr, ggplot2, and other relevant libraries for EDA and modeling).  
 - **Tools and Libraries**:  
-  - **scikit-learn**: For building and evaluating the regression model.  
-  - **Matplotlib & Seaborn**: For data visualization.  
-  - **pandas**: For data preprocessing and analysis.
+  - **ggplot2**: For data visualization.  
+  - **dplyr**: For data preprocessing and analysis.
 
 ---
 
