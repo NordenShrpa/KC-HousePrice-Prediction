@@ -1,0 +1,206 @@
+---
+title: "Data Wrangling for King Country, USA dataset"
+author: "Norden Sherpa"
+output: html_notebook
+---
+
+```{r}
+# Load necessary libraries
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+# reading and loading the csv file in data_file variable
+data_file <- read.csv("kc_house_data.csv")
+```
+
+```{r}
+# first insight into the data 
+head(data_file)
+```
+
+```{r}
+# looking at the structure of the data 
+str(data_file)
+```
+```{r}
+# summary of the data
+summary(data_file)
+```
+```{r}
+# looking for nan or null variables in the datafile
+paste("total rows of the dataset: ", nrow(data_file))
+paste("summmary of the dataset")
+summary(is.na(data_file))
+```
+# since we do not have null variable inside our dataset we do not have to deal with the missing variables 
+
+```{r}
+# looking if the dataset contains any type of duplicate values
+paste("looking for duplicate values in the dataset: ", sum(duplicated(data_file)))
+summary(duplicated(data_file))
+```
+# since we do not have duplicate variables in the dataset, we do not have to deal with the duplicate values.
+
+# after looking at the structure of the dataset the data is not in the type date so changing the date format
+```{r}
+# Converting the 'date' column to a date format
+data_file$date <- as.Date(data_file$date, format="%Y%m%dT%H%M%S")
+```
+
+
+# looking if any column is irrelevant for modeling or analysis
+```{r}
+clean_data_file <- data_file %>% select(-id)
+```
+# since, id column is irrelevant or does not help with with analysis so drpping the id column
+
+# outlier detection 
+
+```{r}
+# Boxplot before outlier handling
+ggplot(clean_data_file, aes(y = price)) + 
+  geom_boxplot() + 
+  labs(title = "Boxplot for Price", y = "Price")
+```
+
+# IQR method: 
+```{r}
+# Detecting outliers using the IQR method for price
+Q1 <- quantile(clean_data_file$price, 0.25)
+Q3 <- quantile(clean_data_file$price, 0.75)
+IQR_value <- IQR(clean_data_file$price)
+paste("fist quartile: ", Q1)
+paste("third quartile: ", Q3)
+paste("Inter quartile range: ", IQR_value)
+```
+
+```{r}
+# Calculating the lower and upper bound
+lower_bound <- Q1 - 1.5 * IQR_value
+upper_bound <- Q3 + 1.5 * IQR_value
+paste("lower bound of the dataset for price: ", lower_bound)
+paste("upper bound of the dataset for price: ", upper_bound)
+```
+
+# Z-scores method: 
+```{r}
+# Z-Score Method for Outliers
+mean_price <- mean(clean_data_file$price)
+std_price <- sd(clean_data_file$price)
+
+# Calculate Z-scores
+clean_data_file$z_scores <- (clean_data_file$price - mean_price) / std_price
+
+paste("mean price: ", mean_price)
+paste("standard price: ", std_price)
+paste("z-score value: ", summary(clean_data_file$z_scores))
+```
+#  outlier detection: 
+```{r}
+# IQR - filtering out the outliers 
+cleaned_data_IQR <- clean_data_file %>% filter(price >= lower_bound & price <= upper_bound)
+cat("Number of observations after IQR outlier removal:", nrow(cleaned_data_IQR), "\n")
+```
+
+```{r}
+#Z-Scores - Filterign out the outliers (Z-score greater than 3 or less than -3)
+cleaned_data_Z <- clean_data_file %>% filter(abs(z_scores) <= 3)
+
+cat("Number of observations after Z-score outlier removal:", nrow(cleaned_data_Z), "\n")
+```
+# removing the outliers from the dataset
+```{r}
+# z-scores
+clean_data_file <- clean_data_file %>% filter(abs(z_scores) <= 3)
+# IQR
+clean_data_file <- clean_data_file %>% filter(price >= lower_bound & price <= upper_bound)
+```
+ 
+
+```{r}
+# Boxplot after outlier handling
+ggplot(clean_data_file, aes(y = price)) + 
+  geom_boxplot() + 
+  labs(title = "Boxplot for Price", y = "Price")
+
+```
+```{r}
+# Droping the z_scores column after filtering
+clean_data_file <- clean_data_file %>% select(-z_scores)
+```
+ 
+```{r}
+paste("No. of rows before outlier handling: ", nrow(data_file))
+paste("No. of rows after outlier handling: ", nrow(clean_data_file))
+
+```
+# Observation: The IQR method removed more outliers (1,146) compared to the Z-score method (406). This suggests that IQR is stricter, where as z-scores is more conservative.
+
+# For correlation matrix of the dataset
+```{r}
+library(reshape2)
+
+# Calculating correlation matrix
+cor_matrix <- cor(clean_data_file[, sapply(clean_data_file, is.numeric)])
+
+# Extracting correlations with price
+price_correlation <- cor_matrix[,"price"]
+
+# correlations sorted by strength
+price_correlation <- sort(price_correlation, decreasing = TRUE)
+print(price_correlation)
+
+# Visualizing the correlation matrix using heatmap
+cor_matrix_melt <- melt(cor_matrix)
+ggplot(data = cor_matrix_melt, aes(Var1, Var2, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Correlation") +
+  theme_minimal() + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 12, hjust = 1)) +
+  coord_fixed()
+
+```
+# The heatmap reveals the correlation between variables, making it easy to spot highly correlated variables with price. Sqft_living and grade stand out. 
+#     AND 
+# After looking at the correlation matrix we can see that some columns are weakly correlated to the  price of the house so removing the columns with respect to the correlation matrices shown above: 
+```{r}
+cleaned_data_file <- clean_data_file %>% 
+  select(-c(waterfront, yr_renovated, sqft_lot, sqft_lot15, yr_built, condition, zipcode))
+```
+```{r}
+head(cleaned_data_file)
+```
+# seperating the features and target to make the dataframe more arranged,
+```{r}
+cleaned_data_file <- cleaned_data_file %>% 
+  select(-price, everything(), price)
+```
+```{r}
+head(cleaned_data_file)
+```
+```{r}
+str(cleaned_data_file)
+```
+```{r}
+# Check for NA values in the training data
+summary (is.na(cleaned_data_file))
+
+```
+
+
+# saving the clean data to a new csv file
+```{r}
+write.csv(cleaned_data_file, "cleaned_data_file.csv", row.names = FALSE)
+```
+
+
+
+
+
+
+

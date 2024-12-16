@@ -1,0 +1,91 @@
+---
+title: "Data Modeling for King Country, USA house price prediction" 
+author: "Norden Sherpa"
+output: html_notebook
+---
+
+```{r}
+# loading necessary library
+library(dplyr)
+library(ggplot2)
+```
+
+```{r}
+# Loading the csv file for modeling
+cleaned_data_file <- read.csv("cleaned_data_file.csv")
+```
+
+# Since, while modeling the data dropping the date column so that there is no non-numeric or format error.
+```{r}
+# Dropping the date column for data modeling
+cleaned_data_file <- cleaned_data_file %>%  select(-date)
+```
+
+#Splitting Data into Training and Testing Sets
+```{r}
+# Splitting the data into training and testing sets (80% training, 20% testing)
+set.seed(666) 
+train_indices <- sample(1:nrow(cleaned_data_file), size = 0.8 * nrow(cleaned_data_file))
+train_data <- cleaned_data_file[train_indices, ]
+test_data <- cleaned_data_file[-train_indices, ]
+
+```
+
+# Building a linear regression model
+```{r}
+# Building the linear regression model using relevant features
+model <- lm(price ~ ., data = train_data)
+```
+# Interpretation: A linear regression model was built using the available features to predict home prices. Linear regression assumes a linear relationship between the features and the target variable (price). 
+# The model summary provides key metrics such as R-squared, which indicates how well the model explains the variation in house prices. Higher values suggest better model fit.
+
+```{r}
+# Summarizing the model
+summary(model)
+```
+# The model summary provides important metrics such as the coefficients for each variable, R-squared, adjusted R-squared, p-values, and residual standard error. These metrics give insights into which features are significant predictors of price, how well the model fits the data, and which variables might not contribute as much to the prediction.
+
+```{r}
+# Predicting on the test data
+predicted_prices <- predict(model, test_data)
+```
+
+```{r}
+# R-squared: This is provided by the summary(model) output
+r_squared <- summary(model)$r.squared
+paste("R-squared:", r_squared)
+```
+# A high R-squared value would suggest that the model explains a large proportion of the variance in house prices. Also gives the accuracy of the model.
+
+```{r}
+# Calculating the mean squared error (MSE)
+mse <- mean((test_data$price - predicted_prices)^2)
+paste("Mean Squared Error:", mse)
+```
+# Interpretation: MSE measures the average squared difference between the actual and predicted house prices. A lower MSE indicates better model performance, meaning the predictions are closer to the actual prices.
+
+```{r}
+# Root Mean Squared Error (RMSE)
+rmse <- sqrt(mse)
+paste("Root Mean Squared Error (RMSE):", rmse)
+```
+# Interpretation: RMSE, as the square root of MSE, provides an easier-to-interpret metric by expressing the error in the same units as the target variable (price). A lower RMSE suggests that the model is more accurate.
+# From the RMSE, we can say that, on average, the model's predictions are off by about $119,630.
+
+```{r}
+# Mean Absolute Error (MAE)
+mae <- mean(abs(test_data$price - predicted_prices))
+paste("Mean Absolute Error (MAE):", mae)
+```
+# Interpretation: MAE gives the average magnitude of errors between actual and predicted prices, without considering direction. A lower MAE indicates that, on average, the model's predictions are close to the actual values.
+# From the MAE we can say that, The model's price predictions are, on average, $90,805 away from the actual house prices.
+
+```{r}
+# Visualizing actual vs. predicted prices
+ggplot(test_data, aes(x = price, y = predicted_prices)) +
+  geom_point(color = "steelblue") +
+  geom_abline(slope = 1, intercept = 0, color = "blue", linewidth = 1) +
+  labs(title = "Actual vs Predicted Prices", x = "Actual Prices", y = "Predicted Prices")
+```
+# Observation: The scatter plot shows how well the model's predicted prices align with actual prices. Points closer to the diagonal line indicate better accuracy.
+# Interpretation: A strong alignment between actual and predicted prices suggests the model's predictions are fairly accurate, but deviations indicate areas where the model under- or over-predicts prices.

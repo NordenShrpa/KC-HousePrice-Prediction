@@ -1,0 +1,210 @@
+---
+title: "Data Visualization for King Country, USA dataset"
+author: "Norden Sherpa"
+output: html_notebook
+---
+
+```{r}
+# load necessary library
+library(dplyr)
+library(ggplot2)
+library(ggcorrplot)
+library(reshape2)
+library(lubridate)
+```
+
+```{r}
+# Reading the cleaned dataset
+cleaned_data_file <- read.csv("cleaned_data_file.csv")
+```
+
+```{r}
+# Checking the structure of the dataset
+str(cleaned_data_file)
+```
+
+```{r}
+# Converting the 'date' column to a date format
+cleaned_data_file$date <- ymd(cleaned_data_file$date)
+```
+
+```{r}
+# Statistical summary of the data 
+summary(cleaned_data_file)
+```
+
+
+
+
+
+### UNI-VARIATE ANALYSIS 
+
+```{r}
+# Price Distribution - Histogram
+ggplot(cleaned_data_file, aes(x = price)) +
+  geom_histogram(bins = 50, fill = "steelblue", color = "black") +
+  labs(title = "Price Distribution", x = "Price", y = "Frequency")
+```
+# Observation: The histogram shows that the majority of house prices are concentrated in the lower price range, with a few high-priced homes creating a long tail.
+# Interpretation: This right-skewed distribution suggests that affordable homes dominate the market, while premium properties are fewer but significantly more expensive.
+
+```{r}
+# Price Distribution - Density Plot
+ggplot(cleaned_data_file, aes(x = price)) +
+  geom_density(fill = "steelblue", alpha = 0.5) +
+  labs(title = "Density Plot for Price", x = "Price", y = "Density")
+```
+# Observation: The density plot supports the histogram, confirming the right-skewed distribution of house prices.
+# Interpretation: The bulk of house prices are in the lower range, indicating a market dominated by affordable homes, with fewer expensive properties.
+
+```{r}
+# Square Footage Distribution - Histogram
+ggplot(cleaned_data_file, aes(x = sqft_living)) +
+  geom_histogram(bins = 50, fill = "steelblue", color = "black") +
+  labs(title = "Distribution of Square Footage", x = "Sqft Living", y = "Count")
+```
+# Observation: Most homes have modest square footage, with some larger homes creating a right-skew in the distribution.
+# Interpretation: This suggests that typical homes are of moderate size, and larger homes, which are likely more expensive, are less common.
+
+```{r}
+# Number of Bedrooms - Bar Chart
+ggplot(cleaned_data_file, aes(x = factor(bedrooms))) +
+  geom_bar(fill = "skyblue", color = "black") +
+  labs(title = "Number of Bedrooms", x = "Bedrooms", y = "Count")
+```
+# Observation: Most homes have between 2-4 bedrooms.
+# Interpretation: The typical house size is suited for small to mid-sized families, reflecting general housing demand.
+
+```{r}
+# Number of Bathrooms - Bar Chart
+ggplot(cleaned_data_file, aes(x = factor(bathrooms))) +
+  geom_bar(fill = "skyblue", color = "black") +
+  labs(title = "Number of Bathrooms", x = "Bathrooms", y = "Count")
+```
+# Observation: Most homes have between 1-3 bathrooms.
+# Interpretation: Homes are generally built to accommodate smaller family needs, with fewer homes designed for larger households with multiple bathrooms.
+
+```{r}
+# Floors Distribution - Bar Chart
+ggplot(cleaned_data_file, aes(x = floors)) +
+  geom_bar(fill = "skyblue", color = "black") +
+  labs(title = "Distribution of Floors", x = "Floors", y = "Count")
+```
+# Observation: Most homes have 1-2 floors.
+# Interpretation: The market is dominated by single-family homes with a conventional floor setup, while multi-floor homes are less common.
+
+
+### BI-VARIATE ANALYSIS
+
+```{r}
+# Scatterplot for Price vs. Square Footage
+ggplot(cleaned_data_file, aes(x = sqft_living, y = price)) +
+  geom_point(alpha = 0.5, color = "steelblue") +
+  geom_smooth(method = "lm", color = "blue") +
+  labs(title = "Price vs. Square Footage", x = "Square Footage (sqft_living)", y = "Price")
+```
+# Observation: There is a clear positive relationship between square footage and price.
+# Interpretation: Larger homes tend to be more expensive, confirming that square footage is a key factor in home pricing.
+
+```{r}
+# Boxplot for Price by Grade
+ggplot(cleaned_data_file, aes(x = as.factor(grade), y = price)) +
+  geom_boxplot() +
+  labs(title = "Price Distribution by Grade", x = "Grade", y = "Price") +
+  theme_minimal()
+```
+# Observation: Higher grades correspond to higher prices, with variation within each grade.
+# Interpretation: Home quality significantly influences price, but there is still variability due to other factors like location and size.
+
+```{r}
+# Boxplot for Price by Number of Bedrooms
+ggplot(cleaned_data_file, aes(x = factor(bedrooms), y = price)) +
+  geom_boxplot() +
+  labs(title = "Price by Number of Bedrooms", x = "Number of Bedrooms", y = "Price")
+```
+# Observation: Homes with more bedrooms generally have higher prices, though there is considerable overlap in prices for homes with different numbers of bedrooms.
+# Interpretation: While more bedrooms can increase the price, factors like home quality, size, and location also contribute to the overall cost.
+
+```{r}
+# Plotting the trend of house prices over time
+ggplot(cleaned_data_file, aes(x = date, y = price)) +
+  geom_line(color = "steelblue", alpha = 0.6) +  # Line plot to show price trend over time
+  geom_smooth(method = "loess", color = "red", se = FALSE) +  # LOESS smoothing to capture trend
+  labs(title = "House Price Trends Over Time", x = "Date", y = "Price") +
+  theme_minimal()
+```
+# Observation: The graph shows considerable daily variability in house prices from mid-2014 to early 2015. The prices fluctuate heavily from day to day, making it difficult to identify any obvious long-term trend in the data.
+# Observation: The red LOESS smoothing curve indicates that, despite the fluctuations, there is only a slight upward or relatively flat movement in prices over time, suggesting minimal price change during the observed period.
+# Interpretation: The lack of a clear trend in house prices could indicate that the overall market remained relatively stable during this period, with no significant long-term increase or decrease in average house prices. The day-to-day fluctuations are likely due to the varying characteristics of individual houses being sold (e.g., size, location, or condition), rather than broader market forces.
+
+
+
+### MULTI-VARIATE ANALYSIS
+
+```{r}
+# Scatter plot of latitude and longitude with house price as color scale
+ggplot(cleaned_data_file, aes(x = long, y = lat, color = price)) +
+  geom_point(alpha = 0.5) +
+  scale_color_gradient(low = "blue", high = "red") +
+  labs(title = "Effect of Latitude and Longitude on House Prices", 
+       x = "Longitude", 
+       y = "Latitude", 
+       color = "Price") +
+  theme_minimal()
+```
+# Observation: Houses located closer to specific geographic coordinates, likely urban centers or waterfront areas, tend to have higher prices, as indicated by the clustering of red points (higher prices).
+# Interpretation: Proximity to desirable locations, such as city centers or scenic areas, significantly raises house prices. However, other factors like house size and condition also play a role in the price variation.
+
+```{r}
+# Correlation Matrix
+corr_matrix <- cor(cleaned_data_file %>% select_if(is.numeric), use = "complete.obs")
+ggcorrplot(corr_matrix, method = "circle", type = "lower", lab = TRUE)
+```
+# Observation: Square footage and grade have the highest positive correlations with price, while bedrooms and bathrooms have a weaker but positive correlation.
+# Interpretation: Square footage and home quality (grade) are the strongest predictors of price. Bedrooms and bathrooms have an impact but are less significant.
+
+```{r}
+# Price vs. Square Footage Faceted by Bedrooms
+ggplot(cleaned_data_file, aes(x = sqft_living, y = price)) +
+  geom_point(alpha = 0.5, color = "lightblue") +
+  geom_smooth(method = "lm", color = "blue", se = FALSE) +
+  facet_wrap(~ bedrooms, scales = "free_y") +
+  labs(title = "Price vs. Sqft Living, Faceted by Number of Bedrooms", x = "Sqft Living", y = "Price")
+```
+# Observation: The positive relationship between square footage and price holds across all bedroom categories, but the strength of the relationship weakens for homes with more bedrooms.
+# Interpretation: Larger homes, regardless of bedroom count, tend to be more expensive, but the influence of square footage diminishes as the number of bedrooms increases.
+
+```{r}
+# Scatter plot of Price vs. Square Footage, faceted by Bathrooms
+ggplot(cleaned_data_file, aes(x = sqft_living, y = price)) +
+  geom_point(alpha = 0.4, color = "lightblue") +
+  geom_smooth(method = "lm",color = "blue", se = FALSE) +
+  facet_wrap(~ bathrooms, scales = "free_y") +
+  labs(title = "Price vs. Square Footage, Faceted by Number of Bathrooms", 
+       x = "Square Footage (sqft)", y = "Price") +
+  theme_minimal()
+
+```
+# Observation: Homes with more bathrooms tend to have more consistent pricing for a given square footage, while homes with fewer bathrooms show more price variation.
+# Interpretation: More bathrooms generally indicate higher home value, leading to more consistent pricing for larger homes, while smaller homes exhibit more price flexibility.
+
+```{r}
+# Scatterplot matrix (pairs plot)
+pairs(cleaned_data_file[, c("price", "sqft_living", "bedrooms", "bathrooms", "grade")], 
+      main = "Pairwise Scatter Plots", col = "blue")
+
+```
+# Observation: The pair plot reveals the pairwise relationships between variables like price, square footage, bedrooms, bathrooms, and grade. 
+# The diagonal shows the distribution of each variable, while the off-diagonal plots show how each pair of variables is related.
+# Notably, price has a strong positive relationship with square footage and grade, and weaker relationships with bedrooms and bathrooms.
+# Square footage also shows a positive correlation with grade and bathrooms.
+
+# Interpretation: 
+# The pair plot confirms that larger homes with higher grades are generally more expensive. 
+# The weaker relationships between price and variables like bedrooms and bathrooms suggest that while they contribute to price, other factors such as home quality (grade) and size (square footage) play a more dominant role in determining home prices. 
+# This visualization helps to visually assess multicollinearity and the linear relationships between variables, supporting the results seen in the correlation matrix and scatter plots.
+
+
+
+
+
