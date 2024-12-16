@@ -44,20 +44,6 @@ The project focuses on identifying the key drivers of house prices, such as **sq
 - Built a **linear regression model** to predict house prices based on selected features.  
 - Evaluated model performance using metrics like **R-squared** (0.64).
 
-### 4. Insights and Recommendations
-- Identified key predictors:  
-  - Square footage (`sqft_living`)  
-  - House quality (`grade`)  
-- Discussed limitations and suggestions for future improvements, including advanced modeling techniques like decision trees or neural networks.
-
----
-
-## Key Findings
-
-- The **square footage of living space** and the **grade of construction** were the most influential factors in predicting house prices.  
-- The linear regression model performed reasonably well, explaining **64% of the price variation** in the dataset.  
-- Improvements such as adding more features (e.g., proximity to amenities) and using non-linear models could further enhance prediction accuracy.
-
 ---
 
 ## Technologies Used
